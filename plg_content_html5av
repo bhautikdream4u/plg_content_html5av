@@ -1,0 +1,182 @@
+<?php
+/**
+ * @copyright   Copyright (C) 2013 mktgexperts.com. All rights reserved.
+ * @license     GNU General Public License version 2 or later; see http://www.gnu.org/licenses/gpl-2.0.html
+ */
+
+defined('_JEXEC') or die;
+// Import library dependencies
+jimport('joomla.plugin.plugin');
+/**
+ * html4av plugin class.
+ *
+ */
+class PlgContentHtml5av extends JPlugin {
+
+	/**
+	 * Constructor
+	 *
+	 * @access      protected
+	 * @param       object  $subject The object to observe
+	 * @param       array   $config  An array that holds the plugin configuration
+	 */
+	 
+	private $app;
+	 
+	public function __construct(& $subject, $config) {
+		parent::__construct($subject, $config);
+		$this->app = JFactory::getApplication();
+		$this->loadLanguage();
+	}
+
+	public function onContentPrepare($context, $row, &$params, $page = 0) {
+	
+		if($this->app->isAdmin() || stripos($context, 'com_content') !== 0 || $this->params->get(0, 2) == 1){
+			return '';
+		}
+	
+		//echo "<pre>";
+		//print_r($row);
+		//exit;
+		// check execution side
+		$app = JFactory::getApplication();
+		//$params = $this->params;
+		if (($app->getName() != $params->get('execution_side')) && $params->get('execution_side') != "both")  return false;
+
+		// no print version for this plugin
+		//if ($print)	return false;
+
+		// imports
+		jimport( 'joomla.filesystem.folder' );
+		jimport( 'joomla.filesystem.file' );
+
+		// get some values
+		$print = $app->input->get('print', false, 'boolean');
+		
+		$debug_mode = $params->get('debug_mode');
+		
+		$id = $row->id;
+		$title = $row->title;
+		
+		$baseFolder = trim($params->get('base_folder')); // TODO: support relative, absolute and external url in the future
+		$layout = trim($params->get('layout'));
+		$template = JFactory::getApplication()->getTemplate();
+
+		// insert plugin styles
+		if ($params->get("add_styles")) {
+			$doc = JFactory::getDocument();
+			$doc->addStyleSheet("media/plg_content_html5av/css/styles.css");
+		}
+
+		// output event calls basic data
+		if ($debug_mode) {
+			if ($context == "com_content.article") {
+				echo "<script>console.log('Message from: PlgContentHtml5av; Event: onContentPrepare; Context: $context; Id: $id; Title: $title')</script>";
+			} else {
+				echo "<script>console.log('Message from: PlgContentHtml5av; Event: onContentPrepare; Context: $context;')</script>";
+			}
+		}
+
+		// check if base folder exist
+		if (!JFolder::exists(JPATH_BASE."/".$baseFolder)) {
+			if ($debug_mode) echo "<script>console.log('Message from: PlgContentHtml5av; Error: Base folder: \"".JPATH_BASE."/".$baseFolder."\" Does not exist!')</script>";
+			return false;
+		}
+	
+
+		// define list of extension and media types
+		$mediaTypes = Array(
+			Array("webm", "video", "video/webm; codecs=vp8,vorbis"),
+			Array("ogv", "video", "video/ogg; codecs=theora,vorbis"),
+			Array("mp4", "video", "")
+		);
+
+		// find plugin tags on the given content
+		$instances = array();
+		$regex = '/{html5av}(.*){\/html5av}/iU';
+		preg_match_all($regex, $row->text, $instances);
+	
+		
+		foreach($instances[1] as $instance) {
+			$instanceParams = strip_tags($instance);
+			$instanceParams = preg_replace('/\x{A0}/u', ' ', $instanceParams);
+			$instanceParams = trim($instanceParams);
+
+			// validate instance params
+			if ($instanceParams == "") {
+				if ($debug_mode) {
+					echo "<script>console.log('Message from: PlgContentHtml5av; Error: Instance parameters are empty')</script>";
+					$row->text = preg_replace($regex, "<strong style=\"color: red; font-size: 2em;\">Message from: PlgContentHtml5av; Error: Instance parameters are empty</strong>", $row->text, 1);
+				} else {
+					$row->text = preg_replace($regex, "", $row->text, 1);
+				}
+				continue;
+			}
+			// DOTO: params will be parsed more or less at this point but for now we only have file name
+			$filename = $instanceParams;
+
+			// validate filename
+			// TODO: extension will be optional in the next release, plugin will auto detect media type and format checking existing files that macches the name
+			// check if filename have extension
+			if (!JFile::getExt($filename)) {
+				if ($debug_mode) {
+					echo "<script>console.log('Message from: PlgContentHtml5av; Error: Extension missing')</script>";
+					$row->text = preg_replace($regex, "<strong style=\"color: red; font-size: 2em;\">Message from: PlgContentHtml5av; Error: Extension missing</strong>", $row->text, 1);
+				} else {
+					$row->text = preg_replace($regex, "", $row->text, 1);
+				}
+				continue;
+			}
+
+			// check if at least one version of the media file exist, and create a list of the existing ones
+			$versionsList = array();
+			$mediaFileExist = false;
+			$fn = JFile::stripExt($filename);
+			foreach($mediaTypes as $mt){
+				if (JFile::exists(JPATH_BASE."/".$baseFolder.$fn.".".$mt[0])) {
+					$mediaFileExist = true;
+					$versionsList[] = Array($baseFolder.$fn.".".$mt[0], $mt[2]);
+				}
+			}
+			if (!$mediaFileExist) {
+				if ($debug_mode) {
+					echo "<script>console.log('Message from: PlgContentHtml5av; Error: No versions of the file were found')</script>";
+					$row->text = preg_replace($regex, "<strong style=\"color: red; font-size: 2em;\">Message from: PlgContentHtml5av; Error: No versions of the file were found</strong>", $row->text, 1);
+				} else {
+					$row->text = preg_replace($regex, "", $row->text, 1);
+				}
+				continue;
+			}
+
+			// check if at least one version of the poster exist
+			if (JFile::exists(JPATH_BASE."/".$baseFolder.$fn.".jpg")) {
+				$poster = $baseFolder.$fn.".jpg";
+			} elseif (JFile::exists(JPATH_BASE."/".$baseFolder.$fn.".png")) {
+				$poster = $baseFolder.$fn.".png";
+			} else {
+				$poster = "media/plg_content_html5av/img/default-poster.png";
+			}
+
+			// generate player markup
+			// checks if alternative layout file exist
+			$tPath = JPATH_THEMES . '/' . $template . '/html/plg_content_html5av/' . $layout . '.php';
+			$dtPath = JPATH_THEMES . '/' . $template . '/html/plg_content_html5av/default.php';
+			$dPath = JPATH_SITE . '/plugins/content/html5av/tmpl/default.php';
+			if (JFile::exists($tPath)) {
+				$path = $tPath;
+			} elseif (JFile::exists($dtPath)) {
+				$path = $dtPath;
+			} else {
+				$path = $dPath;
+			}
+
+			ob_start();
+			include $path;
+			$markup = ob_get_clean();
+			// insert player into the given content
+			$row->text = preg_replace($regex, $markup, $row->text, 1);
+		}
+
+		return true;
+	}
+}
