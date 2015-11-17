@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?> 
+- <!-- copyright     Copyright (C) 2013 mktgexperts.com. All rights reserved.
+license       GNU General Public License version 2 or later; see http://www.gnu.org/licenses/gpl-2.0.html
+
+  --> 
+- <extension version="3.0" type="plugin" group="content" method="upgrade">
+  <name>PLG_CONTENT_HTML5AV</name> 
+  <author>mktgexperts.com</author> 
+  <creationDate>February 2013</creationDate> 
+  <copyright>Copyright (C) 2013 mktgexperts.com. All rights reserved.</copyright> 
+  <license>GNU General Public License version 2 or later; see LICENSE.txt</license> 
+  <authorEmail>enavarro@mktgexperts.com</authorEmail> 
+  <authorUrl>www.mktgexperts.com</authorUrl> 
+  <version>1.0.0</version> 
+  <description>PLG_CONTENT_HTML5AV_XML_DESCRIPTION</description> 
+- <files>
+  <folder>language</folder> 
+  <folder>tmpl</folder> 
+  <filename plugin="html5av">html5av.php</filename> 
+  <filename>index.html</filename> 
+  </files>
+- <media destination="plg_content_html5av" folder="media">
+  <folder>img</folder> 
+  <folder>css</folder> 
+  <folder>js</folder> 
+  <filename>index.html</filename> 
+  </media>
+- <config>
+- <fields name="params">
+- <fieldset name="basic">
+  <field name="base_folder" type="text" default="images/media/" required="true" label="PLG_CONTENT_HTML5AV_FIELD_BASE_FOLDER_LABEL" description="PLG_CONTENT_HTML5AV_FIELD_BASE_FOLDER_DESC" /> 
+- <field name="media_preload" type="radio" class="btn-group" default="1" label="PLG_CONTENT_HTML5AV_FIELD_MEDIA_PRELOAD_LABEL" description="PLG_CONTENT_HTML5AV_FIELD_MEDIA_PRELOAD_DESC">
+  <option value="0">JNo</option> 
+  <option value="1">JYes</option> 
+  </field>
+- <field name="show_player_controls" type="radio" class="btn-group" default="1" label="PLG_CONTENT_HTML5AV_FIELD_SHOW_PLAYER_CONTROLS_LABEL" description="PLG_CONTENT_HTML5AV_FIELD_SHOW_PLAYER_CONTROLS_DESC">
+  <option value="0">JHide</option> 
+  <option value="1">JShow</option> 
+  </field>
+- <field name="add_styles" type="radio" class="btn-group" default="1" label="PLG_CONTENT_HTML5AV_FIELD_ADD_STYLES_LABEL" description="PLG_CONTENT_HTML5AV_FIELD_ADD_STYLES_DESC">
+  <option value="0">JNo</option> 
+  <option value="1">JYes</option> 
+  </field>
+  </fieldset>
+- <fieldset name="advanced">
+- <field name="execution_side" type="list" default="0" label="PLG_CONTENT_HTML5AV_FIELD_EXECUTION_SIDE_LABEL" description="PLG_CONTENT_HTML5AV_FIELD_EXECUTION_SIDE_DESC">
+  <option value="site">PLG_CONTENT_HTML5AV_FIELD_OPTION_FRONTEDN</option> 
+  <option value="admin">PLG_CONTENT_HTML5AV_FIELD_OPTION_BACKEND</option> 
+  <option value="both">PLG_CONTENT_HTML5AV_FIELD_OPTION_BOTH_SIDES</option> 
+  </field>
+- <field name="debug_mode" type="radio" class="btn-group" default="0" label="PLG_CONTENT_HTML5AV_DEBUG_MODE_LABEL" description="PLG_CONTENT_HTML5AV_DEBUG_MODE_DESC">
+  <option value="0">JNo</option> 
+  <option value="1">JYes</option> 
+  </field>
+  </fieldset>
+  </fields>
+  </config>
+  </extension>
